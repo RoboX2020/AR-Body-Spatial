@@ -24,6 +24,7 @@ SR = 44100
 # ─────────────────────────────────────────────
 # Model Download
 # ─────────────────────────────────────────────
+# # Fetch the pre-trained pose-tracking model from Google on first run.
 def download_model():
     if not os.path.exists(POSE_MODEL_PATH):
         print(f"Downloading Pose model to {POSE_MODEL_PATH}...")
@@ -35,6 +36,8 @@ def download_model():
 # ─────────────────────────────────────────────
 SOUND_DUR = 0.5
 
+# # Force every sound to the same length (pad with silence or trim) so they
+# # can simply be added together in the mixer.
 def pad_to(wave, n):
     if len(wave) >= n:
         return wave[:n]
@@ -42,6 +45,8 @@ def pad_to(wave, n):
     out[:len(wave)] = wave
     return out
 
+# # A musical note: a sine wave plus a hint of its octave, shaped by a
+# # fast-attack, smooth-decay volume envelope.
 def gen_note(freq):
     n = int(SR * SOUND_DUR)
     t = np.linspace(0, SOUND_DUR, n)
@@ -49,6 +54,7 @@ def gen_note(freq):
     env = np.exp(-4*t) * (1 - np.exp(-200*t))
     return pad_to((wave*env).astype(np.float32), n)
 
+# # Kick drum: the pitch plunges (140 -> 55 Hz) while fading - a low thump.
 def gen_kick():
     n = int(SR * SOUND_DUR)
     t = np.linspace(0, 0.35, int(SR*0.35))
@@ -56,6 +62,7 @@ def gen_kick():
     wave = np.sin(np.cumsum(2*np.pi*freq/SR)) * np.exp(-10*t) * 0.8
     return pad_to(wave.astype(np.float32), n)
 
+# # Snare: a 200 Hz tone plus a burst of noise - the 'snap'.
 def gen_snare():
     n = int(SR * SOUND_DUR)
     t = np.linspace(0, 0.25, int(SR*0.25))
@@ -63,12 +70,14 @@ def gen_snare():
     noise = np.random.uniform(-1,1,len(t)) * np.exp(-15*t) * 0.4
     return pad_to((tone+noise).astype(np.float32), n)
 
+# # Hi-hat: a very short burst of noise.
 def gen_hihat():
     n = int(SR * SOUND_DUR)
     t = np.linspace(0, 0.08, int(SR*0.08))
     noise = np.random.uniform(-1,1,len(t))
     return pad_to((noise * np.exp(-50*t) * 0.3).astype(np.float32), n)
 
+# # Clap: noise with a wobbling fade; the wobble sounds like many hands.
 def gen_clap():
     n = int(SR * SOUND_DUR)
     t = np.linspace(0, 0.15, int(SR*0.15))
@@ -76,6 +85,7 @@ def gen_clap():
     env = np.exp(-20*t) * (1 + 0.5*np.sin(2*np.pi*100*t))
     return pad_to((noise*env*0.4).astype(np.float32), n)
 
+# # Bass: a distorted (tanh) low sine that rings longer - the booming 808 feel.
 def gen_bass(freq=55):
     n = int(SR * SOUND_DUR)
     t = np.linspace(0, SOUND_DUR, n)
@@ -83,6 +93,8 @@ def gen_bass(freq=55):
     env = np.exp(-2.5*t)
     return pad_to((wave*env).astype(np.float32), n)
 
+# # Pre-build the looping background beat by stamping the drum sounds at
+# # fixed times inside a 2-second buffer.
 def gen_bg_loop():
     dur = 2.0
     n = int(SR * dur)
@@ -113,6 +125,8 @@ TILE_COLORS = [
 # ─────────────────────────────────────────────
 # Audio Engine
 # ─────────────────────────────────────────────
+# # The mixer: the sound card asks for audio in chunks; every triggered sound
+# # is added in from where it left off. Stepping on a tile queues a sound.
 class AudioEngine:
     def __init__(self):
         self.active = []
@@ -155,6 +169,8 @@ class AudioEngine:
 # ─────────────────────────────────────────────
 # 3D Perspective Grid
 # ─────────────────────────────────────────────
+# # Lay out the floor tiles with perspective (smaller toward the top = farther
+# # away), so the floor looks and plays like a real one.
 def build_perspective_grid(w, h, rows, cols):
     top_y = h * 0.05
     bottom_y = h

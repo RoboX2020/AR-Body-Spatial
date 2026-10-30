@@ -22,6 +22,7 @@ MODEL_PATH = "hand_landmarker.task"
 # ─────────────────────────────────────────────
 SR = 44100
 
+# # Pre-build the looping drum track (kick/snare/hihat stamped in a buffer).
 def generate_beat_loop():
     """Generate a punchy looping beat pattern (~2 seconds)."""
     duration = 2.0
@@ -59,6 +60,7 @@ def generate_beat_loop():
 
     return loop
 
+# # Pre-build the looping melody line.
 def generate_melody_loop():
     """Generate a simple melodic synth loop."""
     duration = 2.0
@@ -77,6 +79,7 @@ def generate_melody_loop():
 
     return loop
 
+# # Pre-build the looping bass line.
 def generate_bass_loop():
     """Generate a deep bass loop."""
     duration = 2.0
@@ -100,6 +103,8 @@ def generate_bass_loop():
 # ─────────────────────────────────────────────
 # Binaural HRTF Spatial Engine
 # ─────────────────────────────────────────────
+# # One floating sound source: its on-screen position maps to a direction
+# # around your head, and it owns one of the music loops.
 class SpatialSource:
     """A virtual speaker placed in AR space."""
     def __init__(self, x, y, name, color, loop):
@@ -125,6 +130,9 @@ class SpatialSource:
         """Map y position to distance (closer at bottom, farther at top)."""
         return 0.5 + self.y * 1.5  # 0.5m to 2.0m
 
+# # The 3D-sound mixer: each source's sound is panned and slightly delayed
+# # differently per ear. Your brain locates sound mostly by loudness +
+# # arrival-time differences between the ears - that's the whole trick.
 class SpatialAudioEngine:
     """Binaural audio engine using ITD + ILD for 3D spatial audio."""
     HEAD_RADIUS = 0.0875  # ~8.75cm, average human head radius
@@ -229,6 +237,7 @@ class SpatialAudioEngine:
 # ─────────────────────────────────────────────
 # CLAHE Preprocessor (reuse from drums)
 # ─────────────────────────────────────────────
+# # Lighting fix-up (CLAHE) so hand tracking survives bad lighting.
 class FramePreprocessor:
     def __init__(self):
         self.clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
