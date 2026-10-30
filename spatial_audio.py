@@ -1,3 +1,9 @@
+# ====================================================================
+# spatial_audio.py - surround sound with your hands: virtual speakers float
+# in front of the webcam; pinch one to grab it and drag it around your head,
+# and the music really moves - the engine fakes 3D hearing by panning and
+# slightly delaying the sound reaching each ear.
+# ====================================================================
 import numpy as np
 import sounddevice as sd
 import cv2

@@ -1,3 +1,9 @@
+# ====================================================================
+# floor_beats.py - a floor-drum machine: the webcam watches your FEET
+# (MediaPipe pose tracking of ankles/heels/toes), the floor is divided into
+# tiles, and stepping into a tile plays that tile's drum sound (synthesized
+# kick, snare, notes). Triggers once per step, on tile entry.
+# ====================================================================
 import numpy as np
 import sounddevice as sd
 import cv2
